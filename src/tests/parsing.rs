@@ -24,4 +24,10 @@ mod tests {
         let result = parse_csv_string("A,B,\"C E\"\n1,D,3");
         assert_eq!(result, "[{\"A\":1,\"B\":\"D\",\"C E\":3}]");
     }
+
+    #[test]
+    fn ignore_trailing_whitespace() {
+        let result = parse_csv_string("A,B,C\n1,D,3\n\n");
+        assert_eq!(result, "[{\"A\":1,\"B\":\"D\",\"C\":3}]");
+    }
 }
