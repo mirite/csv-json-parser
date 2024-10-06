@@ -21,7 +21,7 @@ mod tests {
 
     #[test]
     fn read_escaped_at_end() {
-        let result = parse_csv_string("A,B,\"C \"E\"\n1,D,3");
+        let result = parse_csv_string("A,B,\"C E\"\n1,D,3");
         assert_eq!(result, "[{\"A\":1,\"B\":\"D\",\"C E\":3}]");
     }
 }

@@ -1,3 +1,5 @@
+use crate::State::StartingCell;
+
 mod tests;
 
 #[derive(PartialEq)]
@@ -57,7 +59,10 @@ pub fn parse_csv_string(content: &str) -> String {
                 if current_char == '"' {
                     buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
                     index = index + 1; // Skip over the delimiter
-                    parser_state = State::StartingCell;
+                    parser_state = match content.chars().nth(index) {
+                        Some('\n') => State::StartingRow,
+                        _ => StartingCell,
+                    };
                 } else {
                     buffer.push(current_char);
                 }
