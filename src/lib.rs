@@ -1,4 +1,4 @@
-use crate::State::StartingCell;
+use crate::State::{InCell, InQuotedCell, StartingCell, StartingRow};
 
 mod tests;
 
@@ -15,7 +15,7 @@ fn main() {
 }
 
 pub fn parse_csv_string(content: &str) -> String {
-    let mut parser_state = State::StartingCell;
+    let mut parser_state = StartingCell;
     let mut in_headers_row = true;
     let mut index = 0;
     let delimiter = ',';
@@ -25,49 +25,51 @@ pub fn parse_csv_string(content: &str) -> String {
     let mut rows: Vec<Vec<String>> = vec![];
 
     while index < content.len() {
-        if parser_state == State::StartingRow {
-            if in_headers_row {
-                in_headers_row = false;
-            } else {
-                current = add_to_rows(current, &mut rows);
-            }
-            parser_state = State::StartingCell;
-        }
         let current_char = content.chars().nth(index).unwrap();
+        if parser_state == StartingRow {
+            if current_char != '\n' {
+                if in_headers_row {
+                    in_headers_row = false;
+                } else {
+                    current = add_to_rows(current, &mut rows);
+                }
+                parser_state = StartingCell;
+            }
+        }
 
         match parser_state {
-            State::StartingCell => {
+            StartingCell => {
                 if current_char == '"' {
-                    parser_state = State::InQuotedCell;
+                    parser_state = InQuotedCell;
                 } else {
-                    parser_state = State::InCell;
+                    parser_state = InCell;
                     buffer.push(current_char);
                 }
             }
-            State::InCell => {
+            InCell => {
                 if current_char == delimiter {
                     buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
-                    parser_state = State::StartingCell;
+                    parser_state = StartingCell;
                 } else if current_char == '\n' {
-                    parser_state = State::StartingRow;
+                    parser_state = StartingRow;
                     buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
                 } else {
                     buffer.push(current_char);
                 }
             }
-            State::InQuotedCell => {
+            InQuotedCell => {
                 if current_char == '"' {
                     buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
                     index = index + 1; // Skip over the delimiter
                     parser_state = match content.chars().nth(index) {
-                        Some('\n') => State::StartingRow,
+                        Some('\n') => StartingRow,
                         _ => StartingCell,
                     };
                 } else {
                     buffer.push(current_char);
                 }
             }
-            _ => panic!("Something really strange happened."),
+            _ => {}
         }
         index = index + 1;
     }
