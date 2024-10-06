@@ -18,6 +18,8 @@ pub fn parse_csv_string(content: &str) -> String {
     let mut index = 0;
     let delimiter = ',';
     let mut buffer = String::from("");
+    let mut keys: Vec<String> = vec![];
+    let mut current: Vec<String> = vec![];
 
     while index < content.len() {
         if parser_state == State::StartingRow {
@@ -30,33 +32,26 @@ pub fn parse_csv_string(content: &str) -> String {
             State::StartingCell => {
                 if current_char == '"' {
                     parser_state = State::InQuotedCell;
-                    // Add the char to the string being built
-                    buffer.push(current_char);
-                } else if current_char == '\n' {
-                    in_headers_row = false;
-                    parser_state = State::StartingRow;
                 } else {
                     parser_state = State::InCell;
-                    // Add the char to the string being built
                     buffer.push(current_char);
                 }
             }
             State::InCell => {
                 if current_char == delimiter {
-                    // Commit the string
-                    println!("{}", buffer);
-                    buffer = String::from("");
+                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
                     parser_state = State::StartingCell;
+                } else if current_char == '\n' {
+                    parser_state = State::StartingRow;
+                    in_headers_row = false;
+                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
                 } else {
-                    // Add the char to the string being built
                     buffer.push(current_char);
                 }
             }
             State::InQuotedCell => {
                 if current_char == '"' {
-                    // Commit the string
-                    println!("{}", buffer);
-                    buffer = String::from("");
+                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
                     index = index + 1; // Skip over the delimiter
                     parser_state = State::StartingCell;
                 } else {
@@ -67,7 +62,21 @@ pub fn parse_csv_string(content: &str) -> String {
         }
         index = index + 1;
     }
-    // Commit the string
+    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
+    String::from("")
+}
+
+fn commit_string(
+    in_headers_row: bool,
+    keys: &mut Vec<String>,
+    current: &mut Vec<String>,
+    buffer: String,
+) -> String {
     println!("{}", buffer);
+    if in_headers_row == true {
+        keys.push(buffer);
+    } else {
+        current.push(buffer);
+    }
     String::from("")
 }
