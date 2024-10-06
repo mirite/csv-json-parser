@@ -1,6 +1,14 @@
 [package]
 name = "csv-json-parser"
 version = "0.1.0"
+authors = ["Jesse Conner <me@jesseconner.ca>"]
+description = "A package for parsing CSV files into JSON"
+license = "MIT"
 edition = "2021"
+repository = "git@github.com:mirite/csv-json-parser.git"
+
+[lib]
+crate-type = ["cdylib"]
 
 [dependencies]
+wasm-bindgen = "0.2.93"
