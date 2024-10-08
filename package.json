@@ -1,0 +1,33 @@
+{
+  "name": "@mirite/csv-json-parser",
+  "packageManager": "yarn@4.5.0",
+  "type": "module",
+  "collaborators": [
+    "Jesse Conner <me@jesseconner.ca>"
+  ],
+  "description": "A package for parsing CSV files into JSON",
+  "version": "0.1.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "wasm-pack build --target web --out-dir ./dist/pkg && tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mirite/csv-json-parser.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "typescript": "^5.6.3"
+  }
+}
