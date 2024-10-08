@@ -39,11 +39,16 @@ pub fn parse_csv_string(content: &str) -> String {
 
         match parser_state {
             StartingCell => {
-                if current_char == '"' {
-                    parser_state = InQuotedCell;
-                } else {
-                    parser_state = InCell;
-                    buffer.push(current_char);
+                parser_state = match current_char {
+                    '"' => InQuotedCell,
+                    x if x == delimiter => {
+                        buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
+                        StartingCell
+                    }
+                    _ => {
+                        buffer.push(current_char);
+                        InCell
+                    }
                 }
             }
             InCell => {
