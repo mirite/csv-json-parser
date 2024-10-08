@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::parse_csv_string;
+    use crate::input::parse_csv_string;
     #[test]
     fn read_basic() {
         let result = parse_csv_string("A,B,C\n1,D,3");
