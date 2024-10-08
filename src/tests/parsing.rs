@@ -30,4 +30,10 @@ mod tests {
         let result = parse_csv_string("A,B,C\n1,D,3\n\n");
         assert_eq!(result, "[{\"A\":1,\"B\":\"D\",\"C\":3}]");
     }
+
+    #[test]
+    fn read_blank_line() {
+        let result = parse_csv_string("A,B,C\n,,");
+        assert_eq!(result, "[{\"A\":\"\",\"B\":\"\",\"C\":\"\"}]");
+    }
 }
