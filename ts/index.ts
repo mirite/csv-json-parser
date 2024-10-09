@@ -1,4 +1,4 @@
-import wasm, { parse_string } from "../pkg/csv_json_parser.js";
+import wasm, { parse_string } from "./pkg/csv_json_parser.js";
 
 /**
  * Parse a string into a JSON object.
