@@ -9,8 +9,8 @@ import wasm, { parse_string } from "./pkg/csv_json_parser.js";
 export async function parseString<T extends object>(
   data: string,
 ): Promise<T | null> {
+  await wasm();
   try {
-    await wasm();
     const str = parse_string(data) as string;
     return JSON.parse(str);
   } catch (e) {
