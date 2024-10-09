@@ -9,8 +9,14 @@ mod tests {
 
     #[test]
     fn read_carriage_return() {
-        let result = parse_csv_string("A,B,C\n\r1,D,3");
+        let result = parse_csv_string("A,B,C\r\n1,D,3");
         assert_eq!(result, "[{\"A\":1,\"B\":\"D\",\"C\":3}]");
+    }
+
+    #[test]
+    fn read_carriage_return_after_escaped() {
+        let result = parse_csv_string("A,B,\"C,D\"\r\n1,D,3");
+        assert_eq!(result, "[{\"A\":1,\"B\":\"D\",\"C,D\":3}]");
     }
 
     #[test]

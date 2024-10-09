@@ -53,7 +53,7 @@ pub fn parse_csv_string(content: &str) -> String {
                 } else if current_char == '\n' {
                     parser_state = StartingRow;
                     buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
-                } else {
+                } else if current_char != '\r' {
                     buffer.push(current_char);
                 }
             }
@@ -63,6 +63,10 @@ pub fn parse_csv_string(content: &str) -> String {
                     index = index + 1; // Skip over the delimiter
                     parser_state = match content.chars().nth(index) {
                         Some('\n') => StartingRow,
+                        Some('\r') => {
+                            index = index + 1;
+                            StartingRow
+                        }
                         _ => StartingCell,
                     };
                 } else {
