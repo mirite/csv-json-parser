@@ -6,10 +6,10 @@
     "Jesse Conner <me@jesseconner.ca>"
   ],
   "description": "A package for parsing CSV files into JSON",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "scripts": {
-    "build": "wasm-pack build --target web --out-dir ./dist/pkg && tsc",
+    "build": "wasm-pack build --target web --out-dir ./dist/pkg && rm dist/pkg/.gitignore && tsc",
     "lint": "eslint --fix .",
     "format": "prettier --write . & cargo fmt",
     "test": "cargo test"
