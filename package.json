@@ -6,7 +6,7 @@
     "Jesse Conner <me@jesseconner.ca>"
   ],
   "description": "A package for parsing CSV files into JSON",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "scripts": {
     "build": "wasm-pack build --target web --out-dir ./dist/pkg && rm dist/pkg/.gitignore && tsc",
