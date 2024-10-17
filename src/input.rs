@@ -12,15 +12,15 @@ pub enum State {
 pub fn parse_csv_string(content: &str) -> String {
     let mut parser_state = StartingCell;
     let mut in_headers_row = true;
-    let mut index = 0;
+    let approximate_rows = content.matches('\n').count();
     let delimiter = ',';
-    let mut buffer = String::from("");
-    let mut keys: Vec<String> = vec![];
-    let mut current: Vec<String> = vec![];
-    let mut rows: Vec<Vec<String>> = vec![];
+    let mut buffer = String::with_capacity(128);
+    let mut keys: Vec<String> = Vec::with_capacity(10);
+    let mut current: Vec<String> = Vec::with_capacity(10);
+    let mut rows: Vec<Vec<String>> = Vec::with_capacity(approximate_rows);
+    let mut chars = content.chars().peekable();
 
-    while index < content.len() {
-        let current_char = content.chars().nth(index).unwrap();
+    while let Some(&current_char) = chars.peek() {
         if parser_state == StartingRow {
             if current_char != '\n' {
                 if in_headers_row {
@@ -37,7 +37,7 @@ pub fn parse_csv_string(content: &str) -> String {
                 parser_state = match current_char {
                     '"' => InQuotedCell,
                     x if x == delimiter => {
-                        buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
+                        commit_string(in_headers_row, &mut keys, &mut current, &mut buffer);
                         StartingCell
                     }
                     _ => {
@@ -48,23 +48,23 @@ pub fn parse_csv_string(content: &str) -> String {
             }
             InCell => {
                 if current_char == delimiter {
-                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
+                    commit_string(in_headers_row, &mut keys, &mut current, &mut buffer);
                     parser_state = StartingCell;
                 } else if current_char == '\n' {
                     parser_state = StartingRow;
-                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
+                    commit_string(in_headers_row, &mut keys, &mut current, &mut buffer);
                 } else if current_char != '\r' {
                     buffer.push(current_char);
                 }
             }
             InQuotedCell => {
                 if current_char == '"' {
-                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
-                    index = index + 1; // Skip over the delimiter
-                    parser_state = match content.chars().nth(index) {
+                    commit_string(in_headers_row, &mut keys, &mut current, &mut buffer);
+                    chars.next(); // Skip over the delimiter
+                    parser_state = match chars.peek() {
                         Some('\n') => StartingRow,
                         Some('\r') => {
-                            index = index + 1;
+                            chars.next();
                             StartingRow
                         }
                         _ => StartingCell,
@@ -75,9 +75,9 @@ pub fn parse_csv_string(content: &str) -> String {
             }
             _ => {}
         }
-        index = index + 1;
+        chars.next();
     }
-    commit_string(in_headers_row, &mut keys, &mut current, buffer);
+    commit_string(in_headers_row, &mut keys, &mut current, &mut buffer);
     add_to_rows(current, &mut rows);
     output::format_output(keys, rows)
 }
@@ -86,17 +86,18 @@ fn commit_string(
     in_headers_row: bool,
     keys: &mut Vec<String>,
     current: &mut Vec<String>,
-    buffer: String,
-) -> String {
+    buffer: &mut String,
+) {
     if in_headers_row == true {
-        keys.push(buffer);
+        keys.push(buffer.clone());
     } else {
-        current.push(buffer);
+        current.push(buffer.clone());
     }
-    String::from("")
+    buffer.clear();
 }
 
 fn add_to_rows(current: Vec<String>, rows: &mut Vec<Vec<String>>) -> Vec<String> {
+    let length = current.len();
     rows.push(current);
-    vec![]
+    Vec::with_capacity(length)
 }

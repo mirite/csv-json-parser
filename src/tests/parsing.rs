@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::input::parse_csv_string;
+    use std::fs::read_to_string;
     #[test]
     fn read_basic() {
         let result = parse_csv_string("A,B,C\n1,D,3");
@@ -48,4 +49,13 @@ mod tests {
         let result = parse_csv_string("A,B,C\n,,");
         assert_eq!(result, "[{\"A\":\"\",\"B\":\"\",\"C\":\"\"}]");
     }
+
+    // #[test]
+    // fn read_file() {
+    //     let content = read_to_string("All_People.csv");
+    //     match content {
+    //         Ok(f) => parse_csv_string(f.as_str()),
+    //         Err(e) => panic!("{}", e),
+    //     };
+    // }
 }
