@@ -11,7 +11,10 @@ pub fn format_output(keys: Vec<String>, rows: Vec<Vec<String>>) -> String {
             };
             output.push_str(&format!(
                 "\"{}\":{}{}{}",
-                keys[i], value_escape, row[i], value_escape
+                keys[i],
+                value_escape,
+                row[i].replace('"', "\\\""),
+                value_escape
             ));
             if i != column_count - 1 {
                 output.push_str(",");
