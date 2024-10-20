@@ -1,3 +1,5 @@
+use std::iter::Peekable;
+use std::str::Chars;
 use crate::input::State::{InCell, InQuotedCell, StartingCell, StartingRow};
 use crate::output;
 
@@ -10,6 +12,11 @@ pub enum State {
 }
 
 pub fn parse_csv_string(content: &str) -> String {
+let (keys, rows) = parse_document(content);
+    output::format_output(keys, rows)
+}
+
+pub fn parse_document(content: &str)->(Vec<String>,Vec<Vec<String>>) {
     let mut parser_state = StartingCell;
     let mut in_headers_row = true;
     let approximate_rows = content.matches('\n').count();
@@ -59,16 +66,24 @@ pub fn parse_csv_string(content: &str) -> String {
             }
             InQuotedCell => {
                 if current_char == '"' {
-                    commit_string(in_headers_row, &mut keys, &mut current, &mut buffer);
-                    chars.next(); // Skip over the delimiter
-                    parser_state = match chars.peek() {
-                        Some('\n') => StartingRow,
-                        Some('\r') => {
-                            chars.next();
-                            StartingRow
+                    chars.next(); // Consume the quote
+                    if let Some(&next_char) = chars.peek() {
+                        if next_char == '"' {
+                            // It's an escaped quote, consume it and add to buffer
+                            buffer.push('"');
+                        } else {
+                            commit_string(in_headers_row, &mut keys, &mut current, &mut buffer);
+
+                            parser_state = match chars.peek() {
+                                Some('\n') => StartingRow,
+                                Some('\r') => {
+                                    chars.next();
+                                    StartingRow
+                                }
+                                _ => StartingCell,
+                            };
                         }
-                        _ => StartingCell,
-                    };
+                    }
                 } else {
                     buffer.push(current_char);
                 }
@@ -79,7 +94,25 @@ pub fn parse_csv_string(content: &str) -> String {
     }
     commit_string(in_headers_row, &mut keys, &mut current, &mut buffer);
     add_to_rows(current, &mut rows);
-    output::format_output(keys, rows)
+    (keys, rows)
+}
+
+fn is_terminating_quoted_cell(chars: &mut Peekable<Chars>)->bool {
+    if let Some(&next_char) = chars.peek() {
+        if next_char == '"' {
+            chars.next(); // Consume the next quote
+            if let Some(&following_char) = chars.peek() {
+                if following_char == '"' {
+                    // It's an escaped quote, consume it and return false
+                    chars.next();
+                    return false;
+                }
+            }
+            // It's the end of the quoted cell
+            return true;
+        }
+    }
+    false
 }
 
 fn commit_string(

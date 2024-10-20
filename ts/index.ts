@@ -12,6 +12,7 @@ export async function parseString<T extends object>(
   await wasm();
   try {
     const str = parse_string(data) as string;
+    console.log({str})
     return JSON.parse(str);
   } catch (e) {
     console.error(e);
