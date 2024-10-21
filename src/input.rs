@@ -108,7 +108,7 @@ pub fn parse_document(content: &str) -> Result<(Vec<String>, Vec<Vec<String>>), 
         }
         chars.next();
     }
-    if buffer.len() > 0 {
+    if parser_state != StartingRow {
         commit_string(in_headers_row, &mut keys, &mut current, buffer);
     }
     if !current.is_empty() {
