@@ -1,5 +1,11 @@
+use crate::input::Error::MalformedRow;
 use crate::input::State::{InCell, InQuotedCell, StartingCell, StartingRow};
 use crate::output;
+
+#[derive(Debug)]
+enum Error {
+    MalformedRow,
+}
 
 #[derive(PartialEq)]
 pub enum State {
@@ -25,14 +31,15 @@ pub fn parse_document(content: &str) -> (Vec<String>, Vec<Vec<String>>) {
     let mut current: Vec<String> = Vec::with_capacity(10);
     let mut rows: Vec<Vec<String>> = Vec::with_capacity(approximate_rows);
     let mut chars = content_cleaned.chars().peekable();
-
+    let mut column_count = 0;
     while let Some(&current_char) = chars.peek() {
         if parser_state == StartingRow {
             if current_char != '\n' {
                 if in_headers_row {
+                    column_count = keys.len();
                     in_headers_row = false;
                 } else {
-                    current = add_to_rows(current, &mut rows);
+                    current = add_to_rows(current, &mut rows, column_count).expect("REASON");
                 }
                 parser_state = StartingCell;
             }
@@ -57,14 +64,19 @@ pub fn parse_document(content: &str) -> (Vec<String>, Vec<Vec<String>>) {
                 }
             }
             InCell => {
-                if current_char == '\n' {
-                    parser_state = StartingRow;
-                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
-                } else if current_char == delimiter {
-                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
-                    parser_state = StartingCell;
-                } else {
-                    buffer.push(current_char);
+                parser_state = match current_char {
+                    '\n' => {
+                        buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
+                        StartingRow
+                    }
+                    x if x == delimiter => {
+                        buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
+                        StartingCell
+                    }
+                    _ => {
+                        buffer.push(current_char);
+                        InCell
+                    }
                 }
             }
             InQuotedCell => {
@@ -93,7 +105,7 @@ pub fn parse_document(content: &str) -> (Vec<String>, Vec<Vec<String>>) {
     }
     commit_string(in_headers_row, &mut keys, &mut current, buffer);
     if !current.is_empty() {
-        add_to_rows(current, &mut rows);
+        add_to_rows(current, &mut rows, column_count);
     }
     (keys, rows)
 }
@@ -112,8 +124,15 @@ fn commit_string(
     String::from("")
 }
 
-fn add_to_rows(current: Vec<String>, rows: &mut Vec<Vec<String>>) -> Vec<String> {
+fn add_to_rows(
+    current: Vec<String>,
+    rows: &mut Vec<Vec<String>>,
+    column_count: usize,
+) -> Result<Vec<String>, Error> {
     let length = current.len();
+    if length != column_count {
+        return Err(MalformedRow);
+    }
     rows.push(current);
-    Vec::with_capacity(length)
+    Ok(Vec::with_capacity(length))
 }
