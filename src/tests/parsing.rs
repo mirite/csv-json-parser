@@ -89,9 +89,6 @@ mod tests {
         assert_eq!(rows.len(), 12316);
         for row in rows {
             let columns_present = row.len();
-            if row[34] == "lindsaysleightholm@gmail.com" {
-                println!("{}", row[34]);
-            }
             assert_eq!(
                 columns_present, column_count,
                 "Incorrect column count for {}. {} present, {} expected.",
