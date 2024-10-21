@@ -3,7 +3,7 @@ use crate::input::State::{InCell, InQuotedCell, StartingCell, StartingRow};
 use crate::output;
 
 #[derive(Debug)]
-enum Error {
+pub enum Error {
     MalformedRow,
 }
 
@@ -15,12 +15,14 @@ pub enum State {
     StartingRow,
 }
 
-pub fn parse_csv_string(content: &str) -> String {
-    let (keys, rows) = parse_document(content);
-    output::format_output(keys, rows)
+pub fn parse_csv_string(content: &str) -> Result<String, Error> {
+    match parse_document(content) {
+        Ok((keys, rows)) => Ok(output::format_output(keys, rows)),
+        Err(e) => Err(e),
+    }
 }
 
-pub fn parse_document(content: &str) -> (Vec<String>, Vec<Vec<String>>) {
+pub fn parse_document(content: &str) -> Result<(Vec<String>, Vec<Vec<String>>), Error> {
     let mut parser_state = StartingCell;
     let mut in_headers_row = true;
     let approximate_rows = content.matches('\n').count();
@@ -39,7 +41,10 @@ pub fn parse_document(content: &str) -> (Vec<String>, Vec<Vec<String>>) {
                     column_count = keys.len();
                     in_headers_row = false;
                 } else {
-                    current = add_to_rows(current, &mut rows, column_count).expect("REASON");
+                    current = match add_to_rows(current, &mut rows, column_count) {
+                        Ok(value) => value,
+                        Err(e) => return Err(e),
+                    }
                 }
                 parser_state = StartingCell;
             }
@@ -103,11 +108,16 @@ pub fn parse_document(content: &str) -> (Vec<String>, Vec<Vec<String>>) {
         }
         chars.next();
     }
-    commit_string(in_headers_row, &mut keys, &mut current, buffer);
-    if !current.is_empty() {
-        add_to_rows(current, &mut rows, column_count);
+    if buffer.len() > 0 {
+        commit_string(in_headers_row, &mut keys, &mut current, buffer);
     }
-    (keys, rows)
+    if !current.is_empty() {
+        match add_to_rows(current, &mut rows, column_count) {
+            Err(e) => return Err(e),
+            _ => {}
+        }
+    }
+    Ok((keys, rows))
 }
 
 fn commit_string(
