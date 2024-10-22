@@ -13,9 +13,11 @@ export async function parseString<T extends object>(
   await wasm();
   try {
     const str = parse_string(data) as string;
-
+    if(debugChar) {
     console.log({debugChar: str[debugChar]})
     console.log(str.slice(debugChar -20 ,debugChar+20))
+    }
+
 
     return JSON.parse(str);
   } catch (e) {
