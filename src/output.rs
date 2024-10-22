@@ -13,7 +13,7 @@ pub fn format_output(keys: Vec<String>, rows: Vec<Vec<String>>) -> String {
                 "\"{}\":{}{}{}",
                 keys[i],
                 value_escape,
-                row[i].replace('"', "\\\""),
+                row[i].replace('"', "\\\"").replace('\n', "\\n"),
                 value_escape
             ));
             if i != column_count - 1 {

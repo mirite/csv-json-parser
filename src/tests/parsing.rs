@@ -38,7 +38,7 @@ mod tests {
     #[test]
     fn read_with_breaks() {
         let result = parse_csv_string("A,B,C\n1,\"D\nE\",3").unwrap();
-        assert_eq!(result, "[{\"A\":1,\"B\":\"D\nE\",\"C\":3}]");
+        assert_eq!(result, "[{\"A\":1,\"B\":\"D\\nE\",\"C\":3}]");
     }
 
     #[test]
