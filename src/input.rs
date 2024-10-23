@@ -1,3 +1,4 @@
+use std::fmt::Formatter;
 use crate::input::Error::MalformedRow;
 use crate::input::State::{InCell, InQuotedCell, StartingCell, StartingRow};
 use crate::output;
@@ -5,6 +6,12 @@ use crate::output;
 #[derive(Debug)]
 pub enum Error {
     MalformedRow,
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        todo!()
+    }
 }
 
 #[derive(PartialEq)]

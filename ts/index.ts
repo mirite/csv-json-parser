@@ -1,4 +1,4 @@
-import wasm, { parse_string } from "./pkg/csv_json_parser.js";
+import wasm, { parse_to_object } from "./pkg/csv_json_parser.js";
 
 /**
  * Parse a string into a JSON object.
@@ -12,14 +12,15 @@ export async function parseString<T extends object>(
 ): Promise<T | null> {
   await wasm();
   try {
-    const str = parse_string(data) as string;
+    const str = parse_to_object(data);
+    console.log({str})
     if(debugChar) {
     console.log({debugChar: str[debugChar]})
     console.log(str.slice(debugChar -20 ,debugChar+20))
     }
 
 
-    return JSON.parse(str);
+    return str as T
   } catch (e) {
     console.error(e);
     return null;
