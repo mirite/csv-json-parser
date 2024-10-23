@@ -1,16 +1,18 @@
 use crate::input::Error::MalformedRow;
 use crate::input::State::{InCell, InQuotedCell, StartingCell, StartingRow};
 use crate::output;
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum Error {
     MalformedRow,
 }
 
-impl std::fmt::Display for Error {
+impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        match self {
+            MalformedRow => write!(f, "Malformed row encountered"),
+        }
     }
 }
 
@@ -41,6 +43,7 @@ pub fn parse_document(content: &str) -> Result<(Vec<String>, Vec<Vec<String>>), 
     let mut rows: Vec<Vec<String>> = Vec::with_capacity(approximate_rows);
     let mut chars = content_cleaned.chars().peekable();
     let mut column_count = 0;
+
     while let Some(&current_char) = chars.peek() {
         if parser_state == StartingRow {
             if current_char != '\n' {
@@ -57,40 +60,36 @@ pub fn parse_document(content: &str) -> Result<(Vec<String>, Vec<Vec<String>>), 
             }
         }
 
-        match parser_state {
-            StartingCell => {
-                parser_state = match current_char {
-                    '"' => InQuotedCell,
-                    x if x == delimiter => {
-                        buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
-                        StartingCell
-                    }
-                    '\n' => {
-                        buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
-                        StartingRow
-                    }
-                    _ => {
-                        buffer.push(current_char);
-                        InCell
-                    }
+        parser_state = match parser_state {
+            StartingCell => match current_char {
+                '"' => InQuotedCell,
+                x if x == delimiter => {
+                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
+                    StartingCell
                 }
-            }
-            InCell => {
-                parser_state = match current_char {
-                    '\n' => {
-                        buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
-                        StartingRow
-                    }
-                    x if x == delimiter => {
-                        buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
-                        StartingCell
-                    }
-                    _ => {
-                        buffer.push(current_char);
-                        InCell
-                    }
+                '\n' => {
+                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
+                    StartingRow
                 }
-            }
+                _ => {
+                    buffer.push(current_char);
+                    InCell
+                }
+            },
+            InCell => match current_char {
+                '\n' => {
+                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
+                    StartingRow
+                }
+                x if x == delimiter => {
+                    buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
+                    StartingCell
+                }
+                _ => {
+                    buffer.push(current_char);
+                    InCell
+                }
+            },
             InQuotedCell => {
                 if current_char == '"' {
                     chars.next(); // Consume the quote
@@ -98,21 +97,25 @@ pub fn parse_document(content: &str) -> Result<(Vec<String>, Vec<Vec<String>>), 
                         if next_char == '"' {
                             // It's an escaped quote, consume it and add to buffer
                             buffer.push('"');
+                            InQuotedCell
                         } else {
                             buffer = commit_string(in_headers_row, &mut keys, &mut current, buffer);
 
-                            parser_state = match chars.peek() {
+                            match chars.peek() {
                                 Some('\n') => StartingRow,
                                 _ => StartingCell,
-                            };
+                            }
                         }
+                    } else {
+                        InQuotedCell
                     }
                 } else {
                     buffer.push(current_char);
+                    InQuotedCell
                 }
             }
-            _ => {}
-        }
+            _ => parser_state,
+        };
         chars.next();
     }
     if parser_state != StartingRow {
