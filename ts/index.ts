@@ -8,19 +8,10 @@ import wasm, { parse_to_object } from "./pkg/csv_json_parser.js";
  */
 export async function parseString<T extends object>(
   data: string,
-  debugChar?: number
 ): Promise<T | null> {
   await wasm();
   try {
-    const str = parse_to_object(data);
-    console.log({str})
-    if(debugChar) {
-    console.log({debugChar: str[debugChar]})
-    console.log(str.slice(debugChar -20 ,debugChar+20))
-    }
-
-
-    return str as T
+    return parse_to_object(data);
   } catch (e) {
     console.error(e);
     return null;

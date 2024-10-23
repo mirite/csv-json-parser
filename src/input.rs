@@ -1,7 +1,7 @@
-use std::fmt::Formatter;
 use crate::input::Error::MalformedRow;
 use crate::input::State::{InCell, InQuotedCell, StartingCell, StartingRow};
 use crate::output;
+use std::fmt::Formatter;
 
 #[derive(Debug)]
 pub enum Error {
