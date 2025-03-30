@@ -1,6 +1,6 @@
 {
   "name": "@mirite/csv-json-parser",
-  "packageManager": "yarn@4.5.0",
+  "packageManager": "yarn@4.8.1",
   "type": "module",
   "collaborators": [
     "Jesse Conner <me@jesseconner.ca>"
