@@ -1,3 +1,4 @@
+// @ts-expect-error This will exist at build time.
 import wasm, { parse_to_object } from "./pkg/csv_json_parser.js";
 
 /**
